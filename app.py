@@ -25,6 +25,7 @@ def create_app(test_config=None):
 
       return jsonify({
           'success': True,
+          'message': 'successfully returned all actors',
           'actors': actors
       }), 200
     except:
@@ -38,6 +39,7 @@ def create_app(test_config=None):
 
       return jsonify({
           'success': True,
+          'message': 'successfully returned all movies',
           'movies': movies
       }), 200
     except:
@@ -52,22 +54,28 @@ def create_app(test_config=None):
       age = body.get('age', None)
       gender = body.get('gender', None)
 
+      error = None
+
       if name is None or age is None or gender is None:
-          abort(400)
+        error = 400
+        abort(400)
 
       try:
-          actor = Actor(name=name, age=age, gender=gender)
-          actor.insert()
+        actor = Actor(name=name, age=age, gender=gender)
+        actor.insert()
 
-          created_actor = Actor.query.filter_by(name=name).one_or_none()
+        created_actor = Actor.query.filter_by(name=name).one_or_none()
 
-          return jsonify({
-              'success': True,
-              'actors': [created_actor.format]
-          }), 201
+        return jsonify({
+          'success': True,
+          'message': 'successfully added actor',
+          'actor': created_actor.format
+        }), 201
 
       except:
-          abort(422)
+        if error == 400:
+          abort(400)
+        abort(422)
 
   @app.route('/movies', methods=['POST'])
   @requires_auth('add:movie')
@@ -77,22 +85,28 @@ def create_app(test_config=None):
       title = body.get('title', None)
       release_date = body.get('release_date', None)
 
+      error = None
+
       if title is None or release_date is None:
-          abort(400)
+        error = 400
+        abort(400)
 
       try:
-          movie = Movie(title=title, release_date=release_date)
-          movie.insert()
+        movie = Movie(title=title, release_date=release_date)
+        movie.insert()
 
-          created_movie = Movie.query.filter_by(title=title).one_or_none()
+        created_movie = Movie.query.filter_by(title=title).one_or_none()
 
-          return jsonify({
-              'success': True,
-              'movies': [created_movie.format]
-          }), 201
+        return jsonify({
+          'success': True,
+          'message': 'successfully added movie',
+          'movie': created_movie.format
+        }), 201
 
       except:
-          abort(422)
+        if error == 400:
+          abort(400)
+        abort(422)
 
   @app.route('/actors/<int:id>', methods=['PATCH'])
   @requires_auth('modify:actor')
@@ -119,7 +133,8 @@ def create_app(test_config=None):
 
       return jsonify({
           'success': True,
-          'actors': [actor.format]
+          'message': 'successfully updated actor details',
+          'actor': actor.format
       }), 200
 
     except:
@@ -153,7 +168,8 @@ def create_app(test_config=None):
 
       return jsonify({
           'success': True,
-          'actors': [movie.format]
+          'message': 'successfully updated movie details',
+          'movie': movie.format
       }), 200
 
     except:
@@ -166,39 +182,51 @@ def create_app(test_config=None):
   @app.route('/actors/<int:id>', methods=['DELETE'])
   @requires_auth('delete:actor')
   def delete_actors(payload, id):
+      error = None
+
       try:
         actor = Actor.query.filter_by(id=id).one_or_none()
         
         if actor is None:
+          error = 404
           abort(404)
 
         actor.delete()
 
         return jsonify({
           'success': True,
+          'message': 'successfully deleted actor',
           'deleted_id': actor.id
         }), 200
 
       except:
+        if error == 404:
+          abort(404)
         abort(422)
 
   @app.route('/movies/<int:id>', methods=['DELETE'])
   @requires_auth('delete:movie')
   def delete_movies(payload, id):
+    error = None
+
     try:
       movie = Movie.query.filter_by(id=id).one_or_none()
       
       if movie is None:
+        error = 404
         abort(404)
 
       movie.delete()
 
       return jsonify({
         'success': True,
+        'message': 'successfully deleted movie',
         'deleted_id': movie.id
       }), 200
 
     except:
+      if error == 404:
+        abort(404)
       abort(422)
 
   ## Error Handling
@@ -239,7 +267,7 @@ def create_app(test_config=None):
   def auth_error(e):
     return jsonify({
       'success':False,
-      'status': e.status_code,
+      'error': e.status_code,
       'message': e.error['description']
     }), e.status_code
 

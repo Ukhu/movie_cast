@@ -69,7 +69,6 @@ def check_permissions(permission, payload):
     '''
 
     if 'permissions' not in payload:
-        print('PERMISSIONS NOT FOUND HERE!!!!')
         raise AuthError({
             'code': 'invalid_claims',
             'description': 'Permissions not found in payload'
@@ -79,7 +78,7 @@ def check_permissions(permission, payload):
         raise AuthError({
             'code': 'unauthorized',
             'description': 'Access denied. Permission not found'
-        }, 401)
+        }, 403)
   
     return True
         
