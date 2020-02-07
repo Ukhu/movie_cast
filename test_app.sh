@@ -1,6 +1,6 @@
 export ENV='test'
 
-export TEST_DATABASE_URL=''
+export DATABASE_URL_TEST=''
 
 flask db downgrade
 
